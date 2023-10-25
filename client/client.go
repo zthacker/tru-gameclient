@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"gameclient/actions"
 	"gameclient/frontend"
 	"gameclient/proto"
 	"github.com/google/uuid"
@@ -13,10 +14,11 @@ type GameClient struct {
 	CurrentPlayer uuid.UUID
 	Stream        proto.GameBackend_StreamClient
 	View          *frontend.View
+	actionChannel chan actions.Action
 }
 
-func NewGameClient() *GameClient {
-	return &GameClient{}
+func NewGameClient(actionChannel chan actions.Action) *GameClient {
+	return &GameClient{actionChannel: actionChannel}
 }
 
 func (gc *GameClient) Connect(grpcClient proto.GameBackendClient, playerID uuid.UUID, password string, playerName string) error {
@@ -50,6 +52,7 @@ func (gc *GameClient) Connect(grpcClient proto.GameBackendClient, playerID uuid.
 func (gc *GameClient) Start() {
 	//write a loop to handle changes like moves, etc
 
+	//receiving from game server
 	go func() {
 		for {
 			resp, err := gc.Stream.Recv()
@@ -62,6 +65,21 @@ func (gc *GameClient) Start() {
 			case *proto.Response_AddEntity:
 			case *proto.Response_RemoveEntity:
 			case *proto.Response_UpdateEntity:
+			}
+		}
+	}()
+
+	// little test func for sending to server to validate stream
+	go func() {
+		for {
+			action := <-gc.actionChannel
+			switch action.(type) {
+			case actions.MoveAction:
+				d := action.(actions.MoveAction).Direction
+				err := gc.Stream.Send(&proto.Request{Action: &proto.Request_Move{Move: &proto.Move{Direction: proto.Direction(d)}}})
+				if err != nil {
+					logrus.Error(err)
+				}
 			}
 		}
 	}()

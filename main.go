@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gameclient/actions"
 	"gameclient/client"
 	"gameclient/frontend"
 	"gameclient/proto"
@@ -82,7 +83,9 @@ func main() {
 	app := loginApp(&info)
 	app.Run()
 
-	view := frontend.NewView()
+	actionChannel := make(chan actions.Action, 1)
+
+	view := frontend.NewView(actionChannel)
 
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -94,7 +97,7 @@ func main() {
 	defer conn.Close()
 
 	grpcClient := proto.NewGameBackendClient(conn)
-	c := client.NewGameClient()
+	c := client.NewGameClient(actionChannel)
 	playerID := uuid.New()
 	logrus.Info(playerID)
 

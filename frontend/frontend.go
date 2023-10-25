@@ -1,10 +1,10 @@
 package frontend
 
 import (
+	"gameclient/actions"
 	"github.com/gdamore/tcell/v2"
 	"github.com/google/uuid"
 	"github.com/rivo/tview"
-	"github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -23,16 +23,18 @@ type View struct {
 	pages         *tview.Pages
 	drawCallbacks []func()
 	viewPort      tview.Primitive
+	actionChannel chan actions.Action
 	Done          chan error
 }
 
-func NewView() *View {
+func NewView(actionChannel chan actions.Action) *View {
 	app := tview.NewApplication()
 	pages := tview.NewPages()
 	view := &View{
 		App:           app,
 		pages:         pages,
 		drawCallbacks: make([]func(), 0),
+		actionChannel: actionChannel,
 		Done:          make(chan error),
 	}
 
@@ -96,13 +98,30 @@ func setupViewPort(view *View) {
 	box.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
 		switch e.Key() {
 		case tcell.KeyUp:
-			logrus.Info("Up key was pressed")
+			view.actionChannel <- actions.MoveAction{
+				Direction: 0,
+				ID:        view.CurrentPlayer,
+				Created:   time.Now(),
+			}
 		case tcell.KeyDown:
-			logrus.Info("Down key was pressed")
-		case tcell.KeyRight:
-			logrus.Info("Right key was pressed")
+			view.actionChannel <- actions.MoveAction{
+				Direction: 1,
+				ID:        view.CurrentPlayer,
+				Created:   time.Now(),
+			}
 		case tcell.KeyLeft:
-			logrus.Info("Left key was pressed")
+			view.actionChannel <- actions.MoveAction{
+				Direction: 2,
+				ID:        view.CurrentPlayer,
+				Created:   time.Now(),
+			}
+		case tcell.KeyRight:
+			view.actionChannel <- actions.MoveAction{
+				Direction: 3,
+				ID:        view.CurrentPlayer,
+				Created:   time.Now(),
+			}
+
 		}
 		return e
 	})
