@@ -2,16 +2,17 @@ package client
 
 import (
 	"context"
+	"gameclient/frontend"
 	"gameclient/proto"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/metadata"
-	"time"
 )
 
 type GameClient struct {
 	CurrentPlayer uuid.UUID
 	Stream        proto.GameBackend_StreamClient
+	View          *frontend.View
 }
 
 func NewGameClient() *GameClient {
@@ -65,9 +66,9 @@ func (gc *GameClient) Start() {
 		}
 	}()
 
-	for {
-		logrus.Infof("Client: %s is Connected", gc.CurrentPlayer)
-		time.Sleep(10 * time.Second)
-	}
+	//for {
+	//	logrus.Infof("Client: %s is Connected", gc.CurrentPlayer)
+	//	time.Sleep(10 * time.Second)
+	//}
 
 }

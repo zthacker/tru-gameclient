@@ -2,6 +2,7 @@ package main
 
 import (
 	"gameclient/client"
+	"gameclient/frontend"
 	"gameclient/proto"
 	"github.com/andrew-d/go-termutil"
 	"github.com/gdamore/tcell/v2"
@@ -13,7 +14,6 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"time"
 )
 
 const (
@@ -82,6 +82,8 @@ func main() {
 	app := loginApp(&info)
 	app.Run()
 
+	view := frontend.NewView()
+
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
@@ -99,8 +101,15 @@ func main() {
 	c.Connect(grpcClient, playerID, info.Password, info.PlayerName)
 	c.Start()
 
-	for {
-		logrus.Info("hello world!")
-		time.Sleep(20 * time.Second)
+	view.Start()
+
+	err = <-view.Done
+	if err != nil {
+		logrus.Fatal(err)
 	}
+
+	//for {
+	//	logrus.Info("hello world!")
+	//	time.Sleep(20 * time.Second)
+	//}
 }
