@@ -74,45 +74,45 @@ func loginApp(info *connectInfo) *tview.Application {
 }
 
 func main() {
-
+	//check we're using a terminal
 	if !termutil.Isatty(os.Stdin.Fd()) {
 		logrus.Fatal("this program must be run in a terminal")
 	}
 
+	//grab info from login app
 	info := connectInfo{}
 	app := loginApp(&info)
-	app.Run()
-
-	actionChannel := make(chan actions.Action, 1)
-
-	view := frontend.NewView(actionChannel)
+	if err := app.Run(); err != nil {
+		logrus.Fatal(err)
+	}
 
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-
 	conn, err := grpc.Dial(info.Address, opts...)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
 
+	//setup client and frontend (view)
+	actionChannel := make(chan actions.Action, 1)
+	view := frontend.NewView(actionChannel)
 	grpcClient := proto.NewGameBackendClient(conn)
 	c := client.NewGameClient(actionChannel)
 	playerID := uuid.New()
-	logrus.Info(playerID)
 
-	c.Connect(grpcClient, playerID, info.Password, info.PlayerName)
+	//connect
+	if err = c.Connect(grpcClient, playerID, info.Password, info.PlayerName); err != nil {
+		logrus.Fatal(err)
+	}
+
+	//start client and frontend (view)
 	c.Start()
-
 	view.Start()
 
+	//block
 	err = <-view.Done
 	if err != nil {
 		logrus.Fatal(err)
 	}
-
-	//for {
-	//	logrus.Info("hello world!")
-	//	time.Sleep(20 * time.Second)
-	//}
 }

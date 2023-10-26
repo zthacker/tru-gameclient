@@ -33,7 +33,6 @@ func (gc *GameClient) Connect(grpcClient proto.GameBackendClient, playerID uuid.
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Info(resp)
 
 	// Initialize Stream with token
 	header := metadata.New(map[string]string{"authorization": resp.Token})
@@ -83,10 +82,4 @@ func (gc *GameClient) Start() {
 			}
 		}
 	}()
-
-	//for {
-	//	logrus.Infof("Client: %s is Connected", gc.CurrentPlayer)
-	//	time.Sleep(10 * time.Second)
-	//}
-
 }
