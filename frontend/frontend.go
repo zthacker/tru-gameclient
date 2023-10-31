@@ -121,7 +121,6 @@ func setupViewPort(view *View) {
 				ID:        view.CurrentPlayer,
 				Created:   time.Now(),
 			}
-
 		}
 		return e
 	})

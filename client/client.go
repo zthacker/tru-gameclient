@@ -68,7 +68,6 @@ func (gc *GameClient) Start() {
 		}
 	}()
 
-	// little test func for sending to server to validate stream
 	go func() {
 		for {
 			action := <-gc.actionChannel
